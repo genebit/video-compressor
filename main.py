@@ -7,19 +7,22 @@ def convert_size(size):
     return float('{0:.2f}'.format(size / 1e+6)) # Display only 2 decimal places w/o rounding off
 
 def main():
-    # Path
+    # Parameters
     ORIGINAL_VIDEO = 'videos/original.MP4'
     DESTINATION_FILE = 'testdirdest/output.mp4'
+    CRF_VALUE = 28
+    FPS_VALUE = 25
+    CODEC = ['libx264', 'libx265']
 
-    # Default Value
-    os.system('ffmpeg -i {0} -vcodec libx265 -crf 28 {1}'.format(ORIGINAL_VIDEO, DESTINATION_FILE))
+    # Process
+    os.system(f'ffmpeg -i {ORIGINAL_VIDEO} -vcodec {CODEC[1]} -r {FPS_VALUE} -crf {CRF_VALUE} {DESTINATION_FILE}')
 
     # Size comparison for log
     ORIGINAL_VIDEO_SIZE = convert_size(os.path.getsize(ORIGINAL_VIDEO))
     OUTPUT_VIDEO_SIZE = convert_size(os.path.getsize(DESTINATION_FILE))
 
-    print('-----------------------------------------')
-    print('Finished!\n From {0}MB to {1}MB'.format(ORIGINAL_VIDEO_SIZE, OUTPUT_VIDEO_SIZE))
+    print('------------------------------------------------------------------')
+    print(f'Finished Compression!\n From {ORIGINAL_VIDEO_SIZE}MB to {OUTPUT_VIDEO_SIZE}MB')
 
 if __name__ == '__main__':
     # NOTE: LOWER 'CRF' values = higher bitrates, and hence produce higher quality videos.
