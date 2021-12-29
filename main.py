@@ -1,4 +1,6 @@
 import os
+import time
+import math
 
 def converttomb(size):
     # Where size is the byte value
@@ -30,24 +32,34 @@ def multiplefilecompression(crf, fps, vcodec):
     videocodec = [ 'libx264', 'libx265' ]
 
     for i in range(0, len(videos)):
+        start = time.time()
         os.system(f'ffmpeg -i {videos[i]} -vcodec {videocodec[int(vcodec)]} -r {fps} -crf {crf} {destdirs[i]}')
 
         originalfilesize = converttomb(os.path.getsize(videos[i]))
         compressedfilesize = converttomb(os.path.getsize(destdirs[i]))
-
-        print(f'\nFinished Compression!\n {GREEN}From {originalfilesize}MB to {compressedfilesize}MB{RESET}')
+        end = time.time()
+        time_elapsed = math.floor(float(end-start))
+        
+        print(f'\nFinished Compression!\nLogs:')
+        print(f'{GREEN}The Compression Time took {0}s to Finish.{RESET}'.format(time_elapsed))
+        print(f'{GREEN}From {originalfilesize}MB to {compressedfilesize}MB{RESET}')
 
 def singlefilecompression(video, destdir, crf, fps, vcodec):
     path, file = os.path.split(video)
 
     videocodec = [ 'libx264', 'libx265' ]
 
+    start = time.time()
     os.system(f'ffmpeg -i {os.path.join(path, file)} -vcodec {videocodec[int(vcodec)]} -r {fps} -crf {crf} {os.path.join(destdir, file)}')
 
     originalfilesize = converttomb(os.path.getsize(video))
     compressedfilesize = converttomb(os.path.getsize(os.path.join(destdir, file)))
+    end = time.time()
+    time_elapsed = math.floor(float(end-start))
 
-    print(f'\nFinished Compression!\n {GREEN}From {originalfilesize}MB to {compressedfilesize}MB{RESET}')
+    print(f'\nFinished Compression!\nLogs:')
+    print(f'{GREEN}The Compression Time took {0}s to Finish.{RESET}'.format(time_elapsed))
+    print(f'{GREEN}From {originalfilesize}MB to {compressedfilesize}MB{RESET}')
 
 def main():
     s_logo = '''
