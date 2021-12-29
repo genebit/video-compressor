@@ -1,28 +1,30 @@
 import os
 
-def convert_size(size):
+def converttomb(size):
     # Where size is the byte value
     # size to KB (1e+6 means 1×10^6 which also means)
     # So, to put it simply, it is 1 with 6 zeros: 1,000,000
     return float('{0:.2f}'.format(size / 1e+6)) # Display only 2 decimal places w/o rounding off
 
 def main():
-    # Parameters
-    ORIGINAL_VIDEO = 'videos/original.MP4'
-    DESTINATION_FILE = 'testdirdest/output.mp4'
-    CRF_VALUE = 28
-    FPS_VALUE = 25
-    CODEC = ['libx264', 'libx265']
+    # For multiple files
+    with open('videofiles.txt', 'r') as ORIGINAL_VIDEOS:
+        ORIGINAL_VIDEO = ORIGINAL_VIDEOS.read().splitlines()
+        DESTINATION_FILE = open("outputfiles.txt", "r").read().splitlines()
+        CRF_VALUE = 28
+        FPS_VALUE = 25
+        CODEC = ['libx264', 'libx265']
 
-    # Process
-    os.system(f'ffmpeg -i {ORIGINAL_VIDEO} -vcodec {CODEC[1]} -r {FPS_VALUE} -crf {CRF_VALUE} {DESTINATION_FILE}')
+        for i in range(0, len(ORIGINAL_VIDEO)-1):
+            # The Default Value
+            os.system(f'ffmpeg -i {ORIGINAL_VIDEO[i]} -vcodec {CODEC[1]} -r {FPS_VALUE} -crf {CRF_VALUE} {DESTINATION_FILE[i]}')
 
-    # Size comparison for log
-    ORIGINAL_VIDEO_SIZE = convert_size(os.path.getsize(ORIGINAL_VIDEO))
-    OUTPUT_VIDEO_SIZE = convert_size(os.path.getsize(DESTINATION_FILE))
+            # Size comparison for log
+            ORIGINAL_VIDEO_SIZE = converttomb(os.path.getsize(ORIGINAL_VIDEO[i]))
+            OUTPUT_VIDEO_SIZE = converttomb(os.path.getsize(DESTINATION_FILE[i]))
 
-    print('------------------------------------------------------------------')
-    print(f'Finished Compression!\n From {ORIGINAL_VIDEO_SIZE}MB to {OUTPUT_VIDEO_SIZE}MB')
+            print('------------------------------------------------------------------')
+            print(f'Finished Compression!\n From {ORIGINAL_VIDEO_SIZE}MB to {OUTPUT_VIDEO_SIZE}MB')
 
 if __name__ == '__main__':
     # NOTE: LOWER 'CRF' values = higher bitrates, and hence produce higher quality videos.

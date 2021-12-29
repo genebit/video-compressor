@@ -1,2 +1,12 @@
-/home/sample.txt
-/home/document.doc
+/media/genebitara/Sergeant/Backup/backup/compressed/AHQM0829.MP4
+/media/genebitara/Sergeant/Backup/backup/compressed/GVVC8955.MP4
+/media/genebitara/Sergeant/Backup/backup/compressed/IMG_0742.MOV
+/media/genebitara/Sergeant/Backup/backup/compressed/IMG_0743.MOV
+/media/genebitara/Sergeant/Backup/backup/compressed/IMG_0744.MOV
+/media/genebitara/Sergeant/Backup/backup/compressed/IMG_0745.MOV
+/media/genebitara/Sergeant/Backup/backup/compressed/IZPP7118.MP4
+/media/genebitara/Sergeant/Backup/backup/compressed/LPNZ4522.MP4
+/media/genebitara/Sergeant/Backup/backup/compressed/LUUI4095.MP4
+/media/genebitara/Sergeant/Backup/backup/compressed/LUUIE4095.MOV
+/media/genebitara/Sergeant/Backup/backup/compressed/OGNI1597.MP4
+/media/genebitara/Sergeant/Backup/backup/compressed/QAKA7556.MP4
