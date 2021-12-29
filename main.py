@@ -6,32 +6,101 @@ def converttomb(size):
     # So, to put it simply, it is 1 with 6 zeros: 1,000,000
     return float('{0:.2f}'.format(size / 1e+6)) # Display only 2 decimal places w/o rounding off
 
+GREEN = '\033[92m'
+RESET = '\033[0m'
+
+def loader(directory, destdir):
+    videos = open('videofiles.txt', 'w')
+    outputfiles = open('outputfiles.txt', 'w')
+
+    for file in os.listdir(directory):
+        absolutepath = os.path.join(directory, file)
+        destfilepath = os.path.join(destdir, file)
+        videos.write(absolutepath + '\n')
+        outputfiles.write(destfilepath + '\n')
+
+    videos.close()
+    outputfiles.close()
+    print('Finished Loading Files!')
+
+def multiplefilecompression(crf, fps, vcodec):
+    videos = open('videofiles.txt', 'r').read().splitlines()
+    destdirs = open("outputfiles.txt", "r").read().splitlines()
+
+    videocodec = [ 'libx264', 'libx265' ]
+
+    for i in range(0, len(videos)):
+        os.system(f'ffmpeg -i {videos[i]} -vcodec {videocodec[int(vcodec)]} -r {fps} -crf {crf} {destdirs[i]}')
+
+        originalfilesize = converttomb(os.path.getsize(videos[i]))
+        compressedfilesize = converttomb(os.path.getsize(destdirs[i]))
+
+        print(f'\nFinished Compression!\n {GREEN}From {originalfilesize}MB to {compressedfilesize}MB{RESET}')
+
+def singlefilecompression(video, destdir, crf, fps, vcodec):
+    path, file = os.path.split(video)
+
+    videocodec = [ 'libx264', 'libx265' ]
+
+    os.system(f'ffmpeg -i {os.path.join(path, file)} -vcodec {videocodec[int(vcodec)]} -r {fps} -crf {crf} {os.path.join(destdir, file)}')
+
+    originalfilesize = converttomb(os.path.getsize(video))
+    compressedfilesize = converttomb(os.path.getsize(os.path.join(destdir, file)))
+
+    print(f'\nFinished Compression!\n {GREEN}From {originalfilesize}MB to {compressedfilesize}MB{RESET}')
+
 def main():
-    # For multiple files
-    with open('videofiles.txt', 'r') as ORIGINAL_VIDEOS:
-        ORIGINAL_VIDEO = ORIGINAL_VIDEOS.read().splitlines()
-        DESTINATION_FILE = open("outputfiles.txt", "r").read().splitlines()
-        CRF_VALUE = 28
-        FPS_VALUE = 25
-        CODEC = ['libx264', 'libx265']
+    s_logo = '''
+    ▀█░█▀ ░▀░ █▀▀▄ █▀▀ █▀▀█ 　 █▀▀ █▀▀█ █▀▄▀█ █▀▀█ █▀▀█ █▀▀ █▀▀ █▀▀ █▀▀█ █▀▀█ 
+    ░█▄█░ ▀█▀ █░░█ █▀▀ █░░█ 　 █░░ █░░█ █░▀░█ █░░█ █▄▄▀ █▀▀ ▀▀█ ▀▀█ █░░█ █▄▄▀ 
+    ░░▀░░ ▀▀▀ ▀▀▀░ ▀▀▀ ▀▀▀▀ 　 ▀▀▀ ▀▀▀▀ ▀░░░▀ █▀▀▀ ▀░▀▀ ▀▀▀ ▀▀▀ ▀▀▀ ▀▀▀▀ ▀░▀▀
+    
+    [INSTRUCTION]
+    SINGLE FILE COMPRESSION:
+        - Reference the file's full path
+        - Reference only the output folder
+        - Answer the prompt
+    '''
 
-        for i in range(0, len(ORIGINAL_VIDEO)-1):
-            # The Default Value
-            os.system(f'ffmpeg -i {ORIGINAL_VIDEO[i]} -vcodec {CODEC[1]} -r {FPS_VALUE} -crf {CRF_VALUE} {DESTINATION_FILE[i]}')
+    m_logo = '''
+    ▀█░█▀ ░▀░ █▀▀▄ █▀▀ █▀▀█ 　 █▀▀ █▀▀█ █▀▄▀█ █▀▀█ █▀▀█ █▀▀ █▀▀ █▀▀ █▀▀█ █▀▀█ 
+    ░█▄█░ ▀█▀ █░░█ █▀▀ █░░█ 　 █░░ █░░█ █░▀░█ █░░█ █▄▄▀ █▀▀ ▀▀█ ▀▀█ █░░█ █▄▄▀ 
+    ░░▀░░ ▀▀▀ ▀▀▀░ ▀▀▀ ▀▀▀▀ 　 ▀▀▀ ▀▀▀▀ ▀░░░▀ █▀▀▀ ▀░▀▀ ▀▀▀ ▀▀▀ ▀▀▀ ▀▀▀▀ ▀░▀▀
 
-            # Size comparison for log
-            ORIGINAL_VIDEO_SIZE = converttomb(os.path.getsize(ORIGINAL_VIDEO[i]))
-            OUTPUT_VIDEO_SIZE = converttomb(os.path.getsize(DESTINATION_FILE[i]))
+    [INSTRUCTION]
+    MULTIPLE FILE COMPRESSION:
+        - Create a folder, move the videos within and reference the folder in the prompt
+        - Create an output folder for the compressed videos
+        - Answer the prompt
+    '''
 
-            print('------------------------------------------------------------------')
-            print(f'Finished Compression!\n From {ORIGINAL_VIDEO_SIZE}MB to {OUTPUT_VIDEO_SIZE}MB')
+    compress_singlefile = True if input('[PROCESS] Compress Single File? (y/n)\n> ') == 'y' else False
+
+    if compress_singlefile:
+        print(s_logo)
+        videopath = input('[PROCESS] Video Path:\n> ')
+        destdir = input('[PROCESS] Output Path:\n> ')
+        crf = input('[PROCESS] Compression Percentage [0-51]: (Low Percentage will have higher Quality, High will have worse Quality)\n> ')
+        fps = input('[PROCESS] Frames Per Second:\n> ')
+        videocodec = input('[PROCESS] Video Codec (H264/H265) [0/1]:\n> ')
+
+        print('--------------------------------------------\n------------START COMPRESSION---------------\n--------------------------------------------')
+        singlefilecompression(videopath, destdir, crf, fps, videocodec)
+    else:
+        print(m_logo)
+        videopath = input('[PROCESS] Video Path:\n> ')
+        destdir = input('[PROCESS] Output Path:\n> ')
+        crf = input('[PROCESS] Compression Rate [0-51]: (Low rate = Higher Quality, High rate = Worse Quality)\n> ')
+        fps = input('[PROCESS] Frames Per Second:\n> ')
+        videocodec = input('[PROCESS] Video Codec (H264/H265) [0/1]:\n> ')
+
+        print('--------------------------------------------\n------------START COMPRESSION---------------\n--------------------------------------------')
+
+        loader(videopath, destdir)
+        multiplefilecompression(crf, fps, videocodec)
 
 if __name__ == '__main__':
-    # NOTE: LOWER 'CRF' values = higher bitrates, and hence produce higher quality videos.
-    # NOTE: HIGHER 'CRF' values = higher compression rate, a good increment shoud be around 4-6 for H265
-
-    # The range of the CRF scale is 0–51, where 0 is lossless, 23 is the default, and 51 is worst quality possible. 
-    # A lower value generally leads to higher quality, and a subjectively sane range is 17–28.
-
-    # NOTE: The larger the crf is the more time it takes: around 30min
+    # Requirements:
+    #   ffmpeg
+    #   python3
     main()
