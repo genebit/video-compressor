@@ -90,4 +90,6 @@ def main():
 
 
 if __name__ == '__main__':
+    # TODO: Fix () not working
+    # TODO: Add logs after compression
     main()
