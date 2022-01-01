@@ -2,22 +2,41 @@ import os
 import time
 import math
 
-def converttomb(size):
-    # Where size is the byte value
-    # size to KB (1e+6 means 1×10^6 which also means)
-    # So, to put it simply, it is 1 with 6 zeros: 1,000,000
-    return float('{0:.2f}'.format(size / 1e+6)) # Display only 2 decimal places w/o rounding off
 
 GREEN = '\033[92m'
 RESET = '\033[0m'
 
-def loader(directory, destdir):
+totaltime = []
+
+
+def converttomb(size):
+    # Where size is the byte value
+    # size to KB (1e+6 means 1×10^6 which also means)
+    # So, to put it simply, it is 1 with 6 zeros: 1,000,000
+    return float('{0:.2f}'.format(size / 1e+6))  # Display only 2 decimal places w/o rounding off
+
+
+def convertlisttostring(li):
+    temp = ""
+    for i in li:
+        temp += i
+    return temp
+
+
+def checkforspace(path):
+    character = list(path)
+    for i in range(0, len(character)):
+        if character[i] == ' ' and character[i-1] != '\\':
+            character[i] = '\\ '
+    return convertlisttostring(character)
+
+def loader(directory):
     videos = open('videofiles.txt', 'w')
     outputfiles = open('outputfiles.txt', 'w')
 
     for file in os.listdir(directory):
         absolutepath = os.path.join(directory, file)
-        destfilepath = os.path.join(destdir, file)
+        destfilepath = os.path.join(os.path.join(directory, '../Output'), file)
         videos.write(absolutepath + '\n')
         outputfiles.write(destfilepath + '\n')
 
@@ -25,94 +44,52 @@ def loader(directory, destdir):
     outputfiles.close()
     print('Finished Loading Files!')
 
-def multiplefilecompression(crf, fps, vcodec):
+
+def multiplefilecompression(crf, fps, vcodec_opt):
     videos = open('videofiles.txt', 'r').read().splitlines()
     destdirs = open("outputfiles.txt", "r").read().splitlines()
 
-    videocodec = [ 'libx264', 'libx265' ]
+    CRF = '26' if crf == '' else crf
+    FPS = '25' if fps == '' else fps
+    VCODEC_OPT = '1' if vcodec_opt == '' else vcodec_opt
+
+    videocodec = ['libx264', 'libx265']
 
     for i in range(0, len(videos)):
         start = time.time()
-        os.system(f'ffmpeg -i {videos[i]} -vcodec {videocodec[int(vcodec)]} -r {fps} -crf {crf} {destdirs[i]}')
-
-        originalfilesize = converttomb(os.path.getsize(videos[i]))
-        compressedfilesize = converttomb(os.path.getsize(destdirs[i]))
+        os.system(f'ffmpeg -i {checkforspace(videos[i])} -vcodec {videocodec[int(VCODEC_OPT)]} -r {FPS} -crf {CRF} {checkforspace(destdirs[i])}')
         end = time.time()
-        time_elapsed = math.floor(float(end-start))
-        
-        print(f'\nFinished Compression!\nLogs:')
-        print(f'{GREEN}The Compression Time took {0}s to Finish.{RESET}'.format(time_elapsed))
-        print(f'{GREEN}From {originalfilesize}MB to {compressedfilesize}MB{RESET}')
+        time_elapsed = (end - start)
+        totaltime.append(time_elapsed)
 
-def singlefilecompression(video, destdir, crf, fps, vcodec):
-    path, file = os.path.split(video)
-
-    videocodec = [ 'libx264', 'libx265' ]
-
-    start = time.time()
-    os.system(f'ffmpeg -i {os.path.join(path, file)} -vcodec {videocodec[int(vcodec)]} -r {fps} -crf {crf} {os.path.join(destdir, file)}')
-
-    originalfilesize = converttomb(os.path.getsize(video))
-    compressedfilesize = converttomb(os.path.getsize(os.path.join(destdir, file)))
-    end = time.time()
-    time_elapsed = math.floor(float(end-start))
-
-    print(f'\nFinished Compression!\nLogs:')
-    print(f'{GREEN}The Compression Time took {0}s to Finish.{RESET}'.format(time_elapsed))
-    print(f'{GREEN}From {originalfilesize}MB to {compressedfilesize}MB{RESET}')
 
 def main():
-    s_logo = '''
+    logo = '''
     ▀█░█▀ ░▀░ █▀▀▄ █▀▀ █▀▀█ 　 █▀▀ █▀▀█ █▀▄▀█ █▀▀█ █▀▀█ █▀▀ █▀▀ █▀▀ █▀▀█ █▀▀█ 
     ░█▄█░ ▀█▀ █░░█ █▀▀ █░░█ 　 █░░ █░░█ █░▀░█ █░░█ █▄▄▀ █▀▀ ▀▀█ ▀▀█ █░░█ █▄▄▀ 
     ░░▀░░ ▀▀▀ ▀▀▀░ ▀▀▀ ▀▀▀▀ 　 ▀▀▀ ▀▀▀▀ ▀░░░▀ █▀▀▀ ▀░▀▀ ▀▀▀ ▀▀▀ ▀▀▀ ▀▀▀▀ ▀░▀▀
+    '''
+    print(logo)
+    videopath = input('[PROCESS] Video Path:\n> ')
+    crf = input('[PROCESS] Compression Rate [0-51] (Default: 26):\n> ')
+    fps = input('[PROCESS] Frames Per Second (Default: 25):\n> ')
+    videocodec = input('[PROCESS] Video Codec (H264/H265) [0/1] (Default: 1):\n> ')
+
+    print(f'{GREEN}------------START COMPRESSION---------------{RESET}')
+
+    loader(videopath)
+
+    outputfile = f'{videopath}/../Output'
+    if not os.path.isdir(outputfile):
+        os.system(f'mkdir {checkforspace(videopath)}/../Output')
     
-    [INSTRUCTION]
-    SINGLE FILE COMPRESSION:
-        - Reference the file's full path
-        - Reference only the output folder
-        - Answer the prompt
-    '''
+    multiplefilecompression(crf, fps, videocodec)
 
-    m_logo = '''
-    ▀█░█▀ ░▀░ █▀▀▄ █▀▀ █▀▀█ 　 █▀▀ █▀▀█ █▀▄▀█ █▀▀█ █▀▀█ █▀▀ █▀▀ █▀▀ █▀▀█ █▀▀█ 
-    ░█▄█░ ▀█▀ █░░█ █▀▀ █░░█ 　 █░░ █░░█ █░▀░█ █░░█ █▄▄▀ █▀▀ ▀▀█ ▀▀█ █░░█ █▄▄▀ 
-    ░░▀░░ ▀▀▀ ▀▀▀░ ▀▀▀ ▀▀▀▀ 　 ▀▀▀ ▀▀▀▀ ▀░░░▀ █▀▀▀ ▀░▀▀ ▀▀▀ ▀▀▀ ▀▀▀ ▀▀▀▀ ▀░▀▀
+    print(f'{GREEN}----------------FINISHED!-------------------{RESET}')
+    print('Logs:')
 
-    [INSTRUCTION]
-    MULTIPLE FILE COMPRESSION:
-        - Create a folder, move the videos within and reference the folder in the prompt
-        - Create an output folder for the compressed videos
-        - Answer the prompt
-    '''
-
-    compress_singlefile = True if input('[PROCESS] Compress Single File? (y/n)\n> ') == 'y' else False
-
-    if compress_singlefile:
-        print(s_logo)
-        videopath = input('[PROCESS] Video Path:\n> ')
-        destdir = input('[PROCESS] Output Path:\n> ')
-        crf = input('[PROCESS] Compression Percentage [0-51]: (Low Percentage will have higher Quality, High will have worse Quality)\n> ')
-        fps = input('[PROCESS] Frames Per Second:\n> ')
-        videocodec = input('[PROCESS] Video Codec (H264/H265) [0/1]:\n> ')
-
-        print('--------------------------------------------\n------------START COMPRESSION---------------\n--------------------------------------------')
-        singlefilecompression(videopath, destdir, crf, fps, videocodec)
-    else:
-        print(m_logo)
-        videopath = input('[PROCESS] Video Path:\n> ')
-        destdir = input('[PROCESS] Output Path:\n> ')
-        crf = input('[PROCESS] Compression Rate [0-51]: (Low rate = Higher Quality, High rate = Worse Quality)\n> ')
-        fps = input('[PROCESS] Frames Per Second:\n> ')
-        videocodec = input('[PROCESS] Video Codec (H264/H265) [0/1]:\n> ')
-
-        print('--------------------------------------------\n------------START COMPRESSION---------------\n--------------------------------------------')
-
-        loader(videopath, destdir)
-        multiplefilecompression(crf, fps, videocodec)
 
 if __name__ == '__main__':
-    # Requirements:
-    #   ffmpeg
-    #   python3
+    # TODO: Fix () not working
+    # TODO: Add logs after compression
     main()
