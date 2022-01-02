@@ -50,6 +50,13 @@ def loader(directory):
     print('Finished Loading Files!')
 
 
+def playsound():
+    duration = 0.1 
+    beeps = [500, 1200, 2000]
+    for i in range(0, 3):
+        os.system('play -nq -t alsa synth {0} sine {1}'.format(duration, beeps[i]))
+
+
 def multiplefilecompression(crf, fps, vcodec_opt):
     videos = open('videofiles.txt', 'r').read().splitlines()
     destdirs = open("outputfiles.txt", "r").read().splitlines()
@@ -67,6 +74,7 @@ def multiplefilecompression(crf, fps, vcodec_opt):
         end = time.time()
         time_elapsed = (end - start)
         totaltime.append(time_elapsed)
+        playsound()
 
 
 def createoutputdir(videopath):
