@@ -3,3 +3,57 @@
 test.py
 maindir/
 outputdir/
+
+# .pyc
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 编译生成的文件
+build/
+dist/
+*.egg-info/
+
+# Python 安装目录
+site-packages/
+
+# venv 虚拟环境
+venv/
+
+# pip 缓存目录
+pip-selfcheck.json
+pip-delete-this-directory.json
+
+# *.log 日志文件
+*.log
+
+# 数据库相关文件
+*.sqlite3
+
+# 版本控制相关的文件
+.svn/
+.git/
+.hg/
+.bzr/
+
+# 编辑器临时文件
+.editorconfig
+.idea/
+.vscode/
+
+# 测试数据
+tests/
+testdata/
+
+# 第三方库的源码文件
+third_party/
+
+# 项目文档
+docs/
+doctrees/
+old/
+restructuredtext/
+source/
+videofiles.txt
+outputfiles.txt
+videofiles.txt

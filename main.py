@@ -84,17 +84,17 @@ def createoutputdir(videopath):
 
 
 def main():
-    logo = '''
-    ▀█░█▀ ░▀░ █▀▀▄ █▀▀ █▀▀█ 　 █▀▀ █▀▀█ █▀▄▀█ █▀▀█ █▀▀█ █▀▀ █▀▀ █▀▀ █▀▀█ █▀▀█ 
-    ░█▄█░ ▀█▀ █░░█ █▀▀ █░░█ 　 █░░ █░░█ █░▀░█ █░░█ █▄▄▀ █▀▀ ▀▀█ ▀▀█ █░░█ █▄▄▀ 
-    ░░▀░░ ▀▀▀ ▀▀▀░ ▀▀▀ ▀▀▀▀ 　 ▀▀▀ ▀▀▀▀ ▀░░░▀ █▀▀▀ ▀░▀▀ ▀▀▀ ▀▀▀ ▀▀▀ ▀▀▀▀ ▀░▀▀
-    '''
-    print(logo)
-    videopath = input(f'{GREEN}[PROCESS] Video Path:{RESET}\n> ')
+    # logo = '''
+    # ▀█░█▀ ░▀░ █▀▀▄ █▀▀ █▀▀█ 　 █▀▀ █▀▀█ █▀▄▀█ █▀▀█ █▀▀█ █▀▀ █▀▀ █▀▀ █▀▀█ █▀▀█ 
+    # ░█▄█░ ▀█▀ █░░█ █▀▀ █░░█ 　 █░░ █░░█ █░▀░█ █░░█ █▄▄▀ █▀▀ ▀▀█ ▀▀█ █░░█ █▄▄▀ 
+    # ░░▀░░ ▀▀▀ ▀▀▀░ ▀▀▀ ▀▀▀▀ 　 ▀▀▀ ▀▀▀▀ ▀░░░▀ █▀▀▀ ▀░▀▀ ▀▀▀ ▀▀▀ ▀▀▀ ▀▀▀▀ ▀░▀▀
+    # '''
+    # print(logo)
+    videopath = input(f'{GREEN}[PROCESS] Video Path:{RESET}\n> ').strip().strip('"').strip().strip('"')
     crf = input(f'{GREEN}[PROCESS] Compression Rate [0-51] (Default: 26):{RESET}\n> ')
     fps = input(f'{GREEN}[PROCESS] Frames Per Second (Default: 25):{RESET}\n> ')
     videocodec = input(f'{GREEN}[PROCESS] Video Codec (H264/H265) [0/1] (Default: 1):{RESET}\n> ')
-
+    
     print(f'{GREEN}------------START COMPRESSION---------------{RESET}')
 
     loader(videopath)
