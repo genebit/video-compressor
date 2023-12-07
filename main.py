@@ -1,5 +1,8 @@
 import os
+import subprocess
+import sys
 import time
+import msvcrt
 import mimetypes
 
 RED = '\033[91m'
@@ -11,33 +14,132 @@ OUTPUT_FOLDER = "compressed"
 
 VIDEO_CODEC = ['None','libx264', 'libx265','mpeg4']
 
+
+FFMPEG_PATH = None
 compression_time_dict:dict[str,float] = {}
 
+
+def find_ffmpeg():
+    try:
+        # Try to run ffmpeg from the system PATH
+        subprocess.run(["ffmpeg", "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        return "ffmpeg"  # Found in system PATH
+    except FileNotFoundError:
+        pass
+
+    # If ffmpeg is not in system PATH, try to find it in the script's directory
+    script_dir = os.path.dirname(os.path.abspath(os.curdir))
+    ffmpeg_path = os.path.join(script_dir, "ffmpeg.exe")
+
+    if os.path.isfile(ffmpeg_path):
+        return ffmpeg_path  # Found in the script's directory
+
+    return None  # ffmpeg not found
+
+
 def get_output_folder(input_file_path):
-    output_folder = os.path.join(os.path.dirname(input_file_path),OUTPUT_FOLDER)
+    """
+    Get the output folder path based on the input file path.
+
+    Args:
+    - input_file_path (str): The path of the input file.
+
+    Returns:
+    str: The path of the output folder.
+    """
+    # Combine the directory of the input file with the specified output folder name
+    output_folder = os.path.join(os.path.dirname(input_file_path), OUTPUT_FOLDER)
+
+    # Create the output folder if it doesn't exist
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
+
     return output_folder
 
+
 def get_output_path(input_file_path):
-    output_path = os.path.join(get_output_folder(input_file_path),os.path.basename(input_file_path))
+    """
+    Get the output file path based on the input file path.
+
+    Args:
+    - input_file_path (str): The path of the input file.
+
+    Returns:
+    str: The path of the output file.
+    """
+    # Combine the output folder path with the base name of the input file
+    output_path = os.path.join(get_output_folder(input_file_path), os.path.basename(input_file_path))
     return output_path
 
+
 def get_input_output_list(input_path):
+    """
+    Generate a dictionary mapping input video paths to corresponding output paths.
+
+    Args:
+    - input_path (str): The input path, which can be a file or a directory.
+
+    Returns:
+    dict: A dictionary where keys are input video paths and values are corresponding output paths.
+    """
     input_output_dict:dict[str,str] = {}
+
     if os.path.isfile(input_path):
+        # If the input is a file and a video, add it to the dictionary
         if is_video_file(input_path):
             input_output_dict[input_path] = get_output_path(input_path)
     elif os.path.isdir(input_path):
+        # If the input is a directory, iterate through files and add video files to the dictionary
         for file in os.listdir(input_path):
             if not is_video_file(file):
                 continue  # Skip non-video files
-            input_video_path=os.path.join(input_path, file)
+            input_video_path = os.path.join(input_path, file)
             input_output_dict[input_video_path] = get_output_path(input_video_path)
     else:
-        raise FileExistsError(f'{RED} [ERROR] The path does not right. Path: [{input_path}] {RESET}')
-        
+        # Raise an exception if the input path is invalid
+        raise FileExistsError(f'{RED} [ERROR] The path is not correct. Path: [{input_path}] {RESET}')
+
     return input_output_dict
+
+
+def process_input_paths(paths:str|list[str]):
+    """
+    Process a single file path or a list of file paths.
+
+    Args:
+    - paths (str or list): A file path or a list of file paths to process.
+
+    Returns:
+    dict: A dictionary containing input-output pairs for all processed files.
+    """
+    input_output_dict: dict[str, str] = {}
+
+    def process_single_path(single_path):
+        """
+        Process a single file path and update the input-output dictionary.
+
+        Args:
+        - single_path (str): A single file path to process.
+        """
+        if os.path.isfile(single_path) or os.path.isdir(single_path):
+            input_output_dict.update(get_input_output_list(single_path))
+        else:
+            # Handle the case when the path is neither a file nor a directory
+            raise FileNotFoundError(f'{RED} [ERROR] The path does not exist. Path: [{single_path}] {RESET}')
+
+    if isinstance(paths, str):
+        # If a single path is provided, process it
+        process_single_path(paths)
+    elif isinstance(paths, list):
+        # If a list of paths is provided, process each path
+        for path in paths:
+            process_single_path(path)
+    else:
+        # Raise an exception if the input type is not supported
+        raise TypeError(f'{RED} [ERROR] Unsupported input type. Type: [{type(paths)}] {RESET}')
+
+    return input_output_dict
+
 
 def convert_to_mb(size):
     # Where size is the byte value
@@ -82,14 +184,13 @@ def single_compress(input_path,output_path,crf, fps, vcodec_opt):
     
     start = time.time()
     if VCODEC_OPT == '0':
-        os.system(f'ffmpeg -i {check_for_space(input_path)} -r {FPS} -crf {CRF} {check_for_space(output_path)}')
+        os.system(f'{FFMPEG_PATH} -i {check_for_space(input_path)} -r {FPS} -crf {CRF} {check_for_space(output_path)}')
     else:
-        os.system(f'ffmpeg -i {check_for_space(input_path)} -vcodec {VIDEO_CODEC[int(VCODEC_OPT)]} -r {FPS} -crf {CRF} {check_for_space(output_path)}')
+        os.system(f'{FFMPEG_PATH} -i {check_for_space(input_path)} -vcodec {VIDEO_CODEC[int(VCODEC_OPT)]} -r {FPS} -crf {CRF} {check_for_space(output_path)}')
     end = time.time()
     time_elapsed = (end - start)
     compression_time_dict[input_path] = time_elapsed
     single_compress_done(input_path,output_path)
-
 
 def get_user_params():
     crf = input(f'{GREEN}[PROCESS] Compression Rate [0-51] (Default: 26):{RESET}\n> ')
@@ -97,13 +198,17 @@ def get_user_params():
     videocodec = input(f'{GREEN}[PROCESS] Video Codec (None/H264/H265/MPEG4) [0-3] (Default: 0):{RESET}\n> ')
     return crf,fps,videocodec
 
+def main_compress(path:str|list[str]):
+    input_output_dict = process_input_paths(path)
     
-def main_compress(path:str):
-    input_path = path
+    for i, (key, value) in enumerate(input_output_dict.items(), start=1):
+        print(f'{i}. {key}')
+        print(f'\t-> {value}')
+        print()
+    
     crf, fps, video_format_opt = get_user_params()
-    
     print(f'{GREEN}------------START COMPRESSION---------------{RESET}')
-    input_output_dict = get_input_output_list(input_path)
+
     # iterate the input_output_dict and extract the key as iFile, Value as oFile
     for iFile,oFile in input_output_dict.items():
         single_compress(iFile,oFile,crf,fps,video_format_opt)
@@ -116,12 +221,15 @@ def main_compress(path:str):
         original_filesize = convert_to_mb(os.path.getsize(iFile))
         compressed_filesize = convert_to_mb(os.path.getsize(oFile))
         print(
-            f'{GREEN}🗀  {iFile}{RESET}',
-            f'\n↳{GREEN} 🗀  {oFile}{RESET}',
-            f'\n{YELLOW}From {original_filesize} to {compressed_filesize}{RESET}',
+            f'{GREEN}🗀  Input: {iFile}{RESET}',
+            f'\n↳{GREEN} 🗀  Output: {oFile}{RESET}',
+            f'\n{YELLOW}From {original_filesize} MB to {compressed_filesize}{RESET} MB',
             f'\n{GREEN}Process Time: {round(compression_time_dict[iFile]/60, 1)}min\n{RESET}')
 
-def main():
+def process_dragon_files(file_paths:list[str]):
+    main_compress(file_paths)
+
+def process_user_input_files():
     print(f'{RED}[INFO] If it is a folder, compress all videos in that folder. {RESET}')
     print(f'{RED}[INFO] If it is a single video file, compress that file directly {RESET}')
     user_input = input(f'{GREEN}[PROCESS] Path:{RESET}\n> ').strip().strip('"').strip().strip('"')
@@ -131,7 +239,28 @@ def main():
     else:
         compression_time_dict.clear()
         print(f'{RED} [ERROR] The path does not right. Path: [{user_input}] {RESET}')
-        main()
+
+def main():
+    global FFMPEG_PATH
+    handled_drag_files = False
+    while(True):
+        FFMPEG_PATH = find_ffmpeg()
+        if FFMPEG_PATH:
+            if len(sys.argv) > 1 and not handled_drag_files:
+                # 如果有命令行参数，说明是通过拖拽文件或文件夹启动的
+                file_paths = sys.argv[1:]
+                process_dragon_files(file_paths)
+                handled_drag_files = True
+            else:
+                # 否则，可能是通过其他方式启动的，可以在这里添加你的程序逻辑
+                process_user_input_files()
+        else:
+            raise FileNotFoundError(f'ffmpeg cannot found in system PATH or current directory {os.path.abspath(os.curdir)}')
+        print("Press any key to continue...")
+        input()  # This line will wait for the user to press Enter
+
 
 if __name__ == '__main__':
     main()
+
+
