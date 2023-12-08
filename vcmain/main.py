@@ -1,8 +1,8 @@
 import os
+import re
 import subprocess
 import sys
 import time
-import msvcrt
 import mimetypes
 
 RED = '\033[91m'
@@ -20,21 +20,28 @@ compression_time_dict:dict[str,float] = {}
 
 
 def find_ffmpeg():
+    # If ffmpeg is not in system PATH, try to find it in the script's directory
+    script_dir =os.path.dirname(sys.argv[0])
+    ffmpeg_path = os.path.join(script_dir, "ffmpeg.exe")
+    # print(ffmpeg_path)
+    
+    if os.path.isfile(ffmpeg_path):
+        print(f'{GREEN}[INFO] Successfully found FFMPEG in application directory.{RESET}')
+        print(f'{GREEN}\t--> FFMPEG path: {ffmpeg_path}.{RESET}')
+        return ffmpeg_path
+    
     try:
         # Try to run ffmpeg from the system PATH
-        subprocess.run(["ffmpeg", "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-        return "ffmpeg"  # Found in system PATH
+        result = subprocess.run(["ffmpeg", "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        if result.returncode == 0:
+            print(f'{GREEN}[INFO] Successfully found FFMPEG in SYSTEM PATH.{RESET}')
+            return "ffmpeg"
     except FileNotFoundError:
         pass
 
-    # If ffmpeg is not in system PATH, try to find it in the script's directory
-    script_dir = os.path.dirname(os.path.abspath(os.curdir))
-    ffmpeg_path = os.path.join(script_dir, "ffmpeg.exe")
-
-    if os.path.isfile(ffmpeg_path):
-        return ffmpeg_path  # Found in the script's directory
-
+    print(f'{RED}[INFO] Unable to find FFMPEG.{RESET}')
     return None  # ffmpeg not found
+
 
 
 def get_output_folder(input_file_path):
@@ -97,7 +104,7 @@ def get_input_output_list(input_path):
             input_output_dict[input_video_path] = get_output_path(input_video_path)
     else:
         # Raise an exception if the input path is invalid
-        raise FileExistsError(f'{RED} [ERROR] The path is not correct. Path: [{input_path}] {RESET}')
+        raise FileExistsError(f'{RED}[ERROR] The path is not correct. Path: [{input_path}] {RESET}')
 
     return input_output_dict
 
@@ -147,36 +154,42 @@ def convert_to_mb(size):
     # So, to put it simply, it is 1 with 6 zeros: 1,000,000
     return float('{0:.2f}'.format(size / 1e+6))  # Display only 2 decimal places w/o rounding off
 
+def check_for_space(path: str):
+    special_chars = {' ': '\\ ', '(': '\(', ')': '\)'}
 
-def convert_list_to_string(li):
-    temp = ""
-    for i in li:
-        temp += i
-    return temp
+    def escape_special_characters(path: str, special_chars: dict) -> str:
+        """
+        Replace special characters in the given path with their corresponding escape sequences.
 
+        :param path: The input path string.
+        :param special_chars: A dictionary mapping special characters to their escape sequences.
+        :return: The escaped path string.
+        """
+        if not isinstance(path, str):
+            raise TypeError("The provided 'path' argument must be a string.")
 
-def check_for_space(path):
-    character = list(path)
-    for i in range(0, len(character)):
-        # set the char[i] to this if char == to '\', '(', ')' otherwise, just leave as it is
-        character[i] = '\\ 'if (character[i] == ' ') and character[i-1] != '\\' else character[i]
-        character[i] = '\(' if character[i] == '(' else character[i]
-        character[i] = '\)' if character[i] == ')' else character[i]
-            
-    return convert_list_to_string(character)
+        escaped_chars = {re.escape(char): escape for char, escape in special_chars.items()}
+        pattern = re.compile("|".join(escaped_chars.keys()))
 
-def is_video_file(file_path):
+        def replace(match):
+            return escaped_chars[re.escape(match.group())]
+
+        return pattern.sub(replace, path)
+
+    return escape_special_characters(path,special_chars)
+
+def is_video_file(file_path:str):
     mime_type, _ = mimetypes.guess_type(file_path)
     return mime_type and mime_type.startswith('video')
 
 def single_compress_done(input_path:str,output_path:str):
-    print(f'{GREEN} {input_path} compressed. {RESET}')
+    print(f'{GREEN}[INFO] {input_path} compressed.{RESET}')
     # duration = 0.1 
     # beeps = [500, 1200, 2000]
     # for i in range(0, 3):
     #     os.system('play -nq -t alsa synth {0} sine {1}'.format(duration, beeps[i]))
 
-def single_compress(input_path,output_path,crf, fps, vcodec_opt):
+def single_compress(input_path:str,output_path:str,crf, fps, vcodec_opt):
     # Set default values for crf fps and vcodec
     CRF = 26 if crf == '' else crf
     FPS = 25 if fps == '' else fps
@@ -232,33 +245,46 @@ def process_dragon_files(file_paths:list[str]):
 def process_user_input_files():
     print(f'{RED}[INFO] If it is a folder, compress all videos in that folder. {RESET}')
     print(f'{RED}[INFO] If it is a single video file, compress that file directly {RESET}')
-    user_input = input(f'{GREEN}[PROCESS] Path:{RESET}\n> ').strip().strip('"').strip().strip('"')
+    user_input = input(f'{GREEN}[PROCESS] Target Path:{RESET}\n> ').strip().strip('"').strip().strip('"')
     
     if os.path.exists(user_input):
         main_compress(user_input)
     else:
         compression_time_dict.clear()
-        print(f'{RED} [ERROR] The path does not right. Path: [{user_input}] {RESET}')
+        print(f'{RED}[ERROR] The path does not right. Path: [{user_input}] {RESET}')
 
 def main():
     global FFMPEG_PATH
     handled_drag_files = False
     while(True):
-        FFMPEG_PATH = find_ffmpeg()
-        if FFMPEG_PATH:
-            if len(sys.argv) > 1 and not handled_drag_files:
-                # 如果有命令行参数，说明是通过拖拽文件或文件夹启动的
-                file_paths = sys.argv[1:]
-                process_dragon_files(file_paths)
-                handled_drag_files = True
+        try:
+            FFMPEG_PATH = find_ffmpeg()
+            if FFMPEG_PATH:
+                if len(sys.argv) > 1 and not handled_drag_files:
+                    # 如果有命令行参数，说明是通过拖拽文件或文件夹启动的
+                    file_paths = sys.argv[1:]
+                    process_dragon_files(file_paths)
+                    handled_drag_files = True
+                else:
+                    # 否则，可能是通过其他方式启动的，可以在这里添加你的程序逻辑
+                    process_user_input_files()
             else:
-                # 否则，可能是通过其他方式启动的，可以在这里添加你的程序逻辑
-                process_user_input_files()
-        else:
-            raise FileNotFoundError(f'ffmpeg cannot found in system PATH or current directory {os.path.abspath(os.curdir)}')
-        print("Press any key to continue...")
-        input()  # This line will wait for the user to press Enter
-
+                raise FileNotFoundError(f'ffmpeg cannot found in system PATH or current directory {os.path.dirname(os.path.abspath(__file__))}')
+            print("Press any key to continue...")
+            input()  # This line will wait for the user to press Enter
+            
+        except KeyboardInterrupt:
+            print(f'{YELLOW}[WARN] Terminated by user (Ctrl+C), do you want to exit [Y/N] ?{RESET}')
+            user_choice = input('> ').upper()
+            if user_choice == 'Y' or user_choice == 'YES':
+                sys.exit(0)
+                
+        except Exception as e:
+            print(f'{RED}[ERROR] An error occurred:\n{e}{RESET}')
+            handled_drag_files = True
+            print("Press any key to continue...")
+            input()  # This line will wait for the user to press Enter
+            
 
 if __name__ == '__main__':
     main()

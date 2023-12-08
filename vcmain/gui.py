@@ -83,7 +83,7 @@ def main():
     GUI = ThemedTk(theme='arc')
     GUI['background'] = WHITE
     elements(GUI)
-    GUI.title('Video Compressor by Gene')
+    GUI.title('Video Compressor')
     GUI.geometry('600x300')
     GUI.mainloop()
     
