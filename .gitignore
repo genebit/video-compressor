@@ -1,6 +1,5 @@
 *.mp4
 *.MP4
-test.py
 maindir/
 outputdir/
 
@@ -42,7 +41,6 @@ pip-delete-this-directory.json
 .vscode/
 
 # 测试数据
-tests/
 testdata/
 
 # 第三方库的源码文件
