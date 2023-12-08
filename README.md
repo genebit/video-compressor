@@ -14,7 +14,7 @@
 
     **Windows:**
     - Download [ffmpeg here](https://www.ffmpeg.org/)
-    - Set ffmpeg to `$PATH` or place ffmpeg.exe in the same directory of executable file
+    - Set ffmpeg to `$PATH` or place ffmpeg.exe in the `same directory of executable file`
 
 ### Instruction    
 **For Multiple File Compression:**
@@ -25,13 +25,17 @@
 - Once finished, the compressed files are found in the `compressed` folder in the original file(s) folder
 
 **Sample Prompts**
-   [INFO] Successfully found FFMPEG in SYSTEM PATH.
+
+Sample 1. Single File
+```powershell
+   [INFO] Successfully found FFMPEG in application directory.
+          --> FFMPEG path: C:\Users\Administrator\Desktop\video-compressor\ffmpeg.exe
    [INFO] If it is a folder, compress all videos in that folder.
    [INFO] If it is a single video file, compress that file directly
    [PROCESS] Target Path:
-   > "F:\ScreenRecordings\AOTRunStopStatus.mp4"
-   1. F:\ScreenRecordings\AOTRunStopStatus.mp4
-       -> F:\ScreenRecordings\compressed\AOTRunStopStatus.mp4
+   > "F:\ScreenRecordings\Video1.mp4"
+   1. F:\ScreenRecordings\Video1.mp4
+       -> F:\ScreenRecordings\compressed\Video1.mp4
    
    [PROCESS] Compression Rate [0-51] (Default: 26):
    > 25
@@ -40,7 +44,28 @@
    [PROCESS] Video Codec (None/H264/H265/MPEG4) [0-3] (Default: 0):
    > 0
     ------------START COMPRESSION---------------
-    
+```
+
+Sample 2. Folder with videos
+```powershell
+   [INFO] Successfully found FFMPEG in SYSTEM PATH.
+   [INFO] If it is a folder, compress all videos in that folder.
+   [INFO] If it is a single video file, compress that file directly
+   [PROCESS] Target Path:
+   > "F:\ScreenRecordings"
+   1. F:\ScreenRecordings\Video1.mp4
+       -> F:\ScreenRecordings\compressed\Video1.mp4
+   2. F:\ScreenRecordings\Video2.mp4
+       -> F:\ScreenRecordings\compressed\Video2.mp4
+
+   [PROCESS] Compression Rate [0-51] (Default: 26):
+   > 25
+   [PROCESS] Frames Per Second (Default: 25):
+   > 30
+   [PROCESS] Video Codec (None/H264/H265/MPEG4) [0-3] (Default: 0):
+   > 0
+    ------------START COMPRESSION---------------
+```
     - where /home/genebit/Downloads/main is the uncompressed videos
     
     - where compression rate is the rate of compression to be processed,
